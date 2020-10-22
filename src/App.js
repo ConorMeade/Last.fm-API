@@ -1,69 +1,24 @@
 import React, { useState, useEffect } from 'react';
+import { useFetch } from './useFetch';
 import './App.css';
 
 
+const api_key = process.env.REACT_APP_API_LFM_KEY
+console.log(process.env.REACT_APP_API_KEY)
 export function LovedTracks(){
+  console.log("api key: ", api_key)
   // fetch last 9 loved tracks
-  const [lfmLovedData, updateLfmLovedData] = useState({});
-  useEffect(() => {
-    fetch(`https://ws.audioscrobbler.com/2.0/?method=user.getLovedTracks&user=${'cmeade23'}&api_key=${api_key}&limit=15&nowplaying=true&format=json`)
-      .then(response => {
-        if (response.ok){
-          return response.json();
-        }
-        throw new Error('error');
-      })
-      .then(data => updateLfmLovedData(data))
-      .catch(() =>
-      updateLfmLovedData({ error: "oops, something went wrong with Last.fm data"})
-      );
-  }, []);
+  // const [lfmLovedData, updateLfmLovedData] = useState({});
+  const lfmLovedData = useFetch(`https://ws.audioscrobbler.com/2.0/?method=user.getLovedTracks&user=${'cmeade23'}&api_key=${api_key}&limit=15&nowplaying=true&format=json`);
 
-  a
-  const SongArt = (track, artist) => {
-    const [SongData, updateSongData] = useState({});
-    let correctArtistString = artist.replace(' ', '+');
-    let correctTrackString = track.replace(' ', '+');
-    useEffect(() => {
-      fetch(`https://ws.audioscrobbler.com/2.0/?method=track.getinfo&api_key=${api_key}&artist=${correctArtistString}&track=${correctTrackString}&format=json`)
-        .then(response => {
-          if (response.ok){
-            return response.json();
-          }
-          throw new Error('error');
-        })
-        .then(data => updateSongData(data))
-        .catch(() =>
-        updateSongData({ error: "oops, something went wrong with Last.fm data"})
-        );
-    }, []);
-
-    const getArt = () => {
-      const  { error } = SongData;
-      const art = SongData?.album?.image[2]['#text'];
-  
-      if (error) {
-        return <p>{error}</p>;
-      }
-    
-      if (!art) {
-        return <p>Loading</p>;
-      }
-  
-      return <img src={art} />
-  
-    };
-    return getArt();
-  }
+  console.log("data: ", lfmLovedData);
 
   const buildChart = () => {
-    console.log('data: ');
     console.log(lfmLovedData);
-    let result = [];
+    let tracksList = [];
     const  { error } = lfmLovedData;
     const tracks = lfmLovedData?.lovedtracks?.track;
-    console.log("tracks: ");
-    console.log(tracks);
+    console.log("tracks: ", tracks);
     if (error) {
       return <p>{error}</p>;
     }
@@ -76,18 +31,21 @@ export function LovedTracks(){
       use array destructuring to create [song, artist, (image link)]
       parse image as <img src = {arr[2]} />
     */
+    // let images = [];
     for(let i = 0; i < tracks.length; i++){
-      let song = tracks[i].name;
-      let artist = tracks[i].artist.name;
-      result.push([song, artist]);
+      tracksList.push({ song: tracks[i].name,
+                    artist: tracks[i].artist.name,
+                    image: tracks[i].image[0]['#text']});
     }
 
-    const recent_loved = result.map((song, i) => <li key = {i}>{song[0]} by {song[1]}</li>)
-    console.log(recent_loved);
+    console.log("results: ", tracksList);
+
+    // const recent_loved = tracksList.map((song, artist, i) => <li key = {i}>{song} by {artist}</li>)
+    // console.log("recent_loved: ", recent_loved);
     return (
       <div>
-        <h2>Most Recently Loved Tracks on Last.fm:</h2>
-        <ol>{recent_loved}</ol>
+        {/* <h2>Most Recently Loved Tracks on Last.fm:</h2>
+        <ol>{tracksList}</ol> */}
       </div>
       )
 
@@ -95,45 +53,27 @@ export function LovedTracks(){
   return buildChart();
 };
 
+export const SongArt = () =>  {
 
-export function SongArt(){
-  // get album art
-  const [SongData, updateSongData] = useState({});
-  let track = 'Money Trees';
-  let artist = 'Kendrick Lamar';
-  let correctArtistString = artist.replace(' ', '+');
-  let correctTrackString = track.replace(' ', '+');
-  useEffect(() => {
-    fetch(`https://ws.audioscrobbler.com/2.0/?method=track.getinfo&api_key=${api_key}&artist=${correctArtistString}&track=${correctTrackString}&format=json`)
-    // fetch(`https://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=${api_key}&artist=Kendrick+Lamar&track=Money+Trees&format=json`)
-      .then(response => {
-        if (response.ok){
-          return response.json();
-        }
-        throw new Error('error');
-      })
-      .then(data => updateSongData(data))
-      .catch(() =>
-      updateSongData({ error: "oops, something went wrong with Last.fm data"})
-      );
-  }, []);
+  let track = "Money Trees";
+  let artist = "Kendrick Lamar"
+  // if(typeof track == 'string' && typeof artist == 'string'){
+  const correctArtistString = artist.toString().replace(' ', '+');
+  const correctTrackString = track.toString().replace(' ', '+');
+  // }
+  const SongData = useFetch(`https://ws.audioscrobbler.com/2.0/?method=track.getinfo&api_key=${api_key}&artist=${correctArtistString}&track=${correctTrackString}&format=json`);
+  console.log(SongData);
+  const  { error } = SongData;
+  const art = SongData?.track?.album?.image[2]['#text'];
+  console.log("art: ", art);
 
-  const getArt = () => {
-    console.log(SongData);
-    const  { error } = SongData;
-    const art = SongData?.track?.album?.image[2]['#text'];
-
-    console.log(art);
-    if (error) {
-      return <p>{error}</p>;
-    }
+  if (error) {
+    return <p>{error}</p>;
+  }
   
-    if (!art) {
-      return <p>Loading...</p>;
-    }
-    
-    return <img src={art} />
+  if (!art) {
+    return <p>Loading...</p>;
+  }
 
-  };
-  return getArt();
-};
+  return <img src= {art} alt = "loading..."/>
+}
