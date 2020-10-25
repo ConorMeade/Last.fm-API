@@ -4,7 +4,7 @@ import './index.css';
 import  { LovedTracks, SongArt } from './App';
 
 ReactDOM.render(
-  <SongArt/>,
+  <LovedTracks/>,
   document.getElementById('root')
 );
 
